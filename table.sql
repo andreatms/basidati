@@ -40,7 +40,7 @@ CREATE TABLE Filiale(
     Via VARCHAR(30) NOT NULL,
     Civico INT NOT NULL,
     Localita NUMERIC(5) NOT NULL REFERENCES Localita(CAP) ON UPDATE CASCADE ON DELETE NO ACTION,
-    NumeroDipendenti INT 
+    NumeroDipendenti INT NOT NULL
 )
 
 CREATE TABLE Localita(
