@@ -172,6 +172,12 @@ CREATE TABLE Unita(
 	FOREIGN KEY (Categoria) REFERENCES Categoria(CodiceCategoria) ON UPDATE CASCADE ON DELETE NO ACTION	
 )
 
+CREATE TABLE Categoria(
+	CodiceCategoria INT PRIMARY KEY,
+	VolumeMassimo INT NOT NULL,
+    VolumeMinimo INT NOT NULL
+)
+
 CREATE TABLE Tariffa(
 	CodiceTariffa INT PRIMARY KEY,
 	Costo INT NOT NULL
@@ -205,8 +211,8 @@ CREATE TABLE Spostamenti(
 )
 
 CREATE TABLE Tratte_Percorso(
+    Tratta INT  REFERENCES Tratta(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,   
     Percorso INT REFERENCES Percorso(Codice) ON UPDATE CASCADE ON DELETE CASCADE,
-    Tratta INT  REFERENCES Tratta(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
     Numero INT NOT NULL,
 
     PRIMARY KEY(Percorso, Tratta)
@@ -259,8 +265,3 @@ CREATE TABLE Carico_Ritiro(
 
 
 
-CREATE TABLE Tariffa(
-	CodiceTariffa INT PRIMARY KEY,
-	Pezzo INT NOT NULL,
-	VolumeMassimo INT NOT NULL
-)
