@@ -1,5 +1,5 @@
 CREATE TABLE Dipendente(
-    Matricola INT PRIMARY KEY,
+    Matricola INT PRIMARY KEY ,
     Nome VARCHAR(20) NOT NULL,
     Cognome VARCHAR(20) NOT NULL,
     Sesso CHAR(1) NOT NULL CHECK (Sesso in ('M','F')),
@@ -9,11 +9,7 @@ CREATE TABLE Dipendente(
     CAP NUMERIC(5) NOT NULL,
     Regione VARCHAR(20) NOT NULL,
     Provincia VARCHAR(2) NOT NULL,
-    CodiceFiscale CHAR(16) NOT NULL,
-    Ruolo VARCHAR(5) NOT NULL REFERENCES Ruolo(Sigla),
-    DataInizio DATE NOT NULL,
-    Sezione VARCHAR(5) NOT NULL REFERENCES Sezione(Sigla),
-    Filiale INT NOT NULL REFERENCES Filiale(Codice)
+    CodiceFiscale CHAR(16) NOT NULL
 )
 
 CREATE TABLE Ruolo(
@@ -24,16 +20,16 @@ CREATE TABLE Ruolo(
 
 CREATE TABLE Sezione(
     Sigla VARCHAR(5) PRIMARY KEY,
-    Filiale INT NOT NULL REFERENCES Filiale(Codice),
+    Filiale INT NOT NULL REFERENCES Filiale(Codice) ON UPDATE CASCADE ON DELETE CASCADE,
     Nome VARCHAR(20) NOT NULL
 )
 
 
 CREATE TABLE Impiego_Passato(
-    DataInizio DATE REFERENCES NOT NULL,
-    Dipendente INT Dipendente(Matricola) NOT NULL,
+    DataInizio DATE,
+    Dipendente INT REFERENCES Dipendente(Matricola) ON UPDATE CASCADE ON DELETE NO ACTION,
     DataFine DATE NOT NULL,
-    Ruolo VARCHAR(20) REFERENCES Ruolo(Sigla) NOT NULL,
+    Ruolo VARCHAR(5) REFERENCES Ruolo(Sigla) ON UPDATE CASCADE ON DELETE NO ACTION,
 
     PRIMARY KEY (DataInizio, Dipendente)
 )
@@ -43,7 +39,8 @@ CREATE TABLE Filiale(
     Tipo VARCHAR(20) NOT NULL CHECK (Tipo IN ('Hub','Secondaria')),
     Via VARCHAR(30) NOT NULL,
     Civico INT NOT NULL,
-    Localita NUMERIC(5) NOT NULL REFERENCES Localita(CAP)
+    Localita NUMERIC(5) NOT NULL REFERENCES Localita(CAP) ON UPDATE CASCADE ON DELETE NO ACTION,
+    NumeroDipendenti INT 
 )
 
 CREATE TABLE Localita(
@@ -51,38 +48,38 @@ CREATE TABLE Localita(
     Regione VARCHAR(20) NOT NULL,
     Provincia VARCHAR(2) NOT NULL,
     Citta VARCHAR(20) NOT NULL,
-    CodiceGiro INT NOT NULL REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro)
+    CodiceGiro NOT NULL INT REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro) ON UPDATE CASCADE ON DELETE NO ACTION
 ) 
 
 
 CREATE TABLE Zone_Di_Consegna_E_Ritiro(
     CodiceGiro INT PRIMARY KEY,
-    CodiceFiliale INT REFERENCES Filiale(Codice) NOT NULL
+    CodiceFiliale INT NOT NULL REFERENCES Filiale(Codice) ON UPDATE CASCADE ON DELETE CASCADE
 )
 
 CREATE TABLE Consegna_Effettiva(
-    CodiceGiro INT REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro),
-    Data DATE,
-    OraUscita TIMESTAMP, 
-    OraRientro TIMESTAMP NOT NULL,
-    Mezzo INT REFERENCES Mezzo(Targa) NOT NULL,
-    
-    PRIMARY KEY(CodiceGiro, Data, OraUscita)   
+    Codice INT PRIMARY KEY,
+    CodiceGiro INT NOT NULL REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro) ON UPDATE CASCADE ON DELETE NO ACTION,
+    Data DATE NOT NULL, 
+    OraUscita TIMESTAMP NOT NULL, 
+    OraRientro TIMESTAMP,
+    Mezzo INT NOT NULL REFERENCES Mezzo(Targa) ON UPDATE CASCADE ON DELETE NO ACTION,   
+    UNIQUE(CodiceGiro, Data, OraUscita)
 )
 
 CREATE TABLE Ritiro_Effettivo(
-    CodiceGiro INT REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro),
-    Data DATE,
-    OraUscita TIMESTAMP, 
-    OraRientro TIMESTAMP NOT NULL,
-    Mezzo INT REFERENCES Mezzo(Targa) NOT NULL,
-    
-    PRIMARY KEY(CodiceGiro, Data, OraUscita)
+    Codice INT PRIMARY KEY,
+    CodiceGiro INT NOT NULL REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro)  ON UPDATE CASCADE ON DELETE NO ACTION,
+    Data DATE NOT NULL,
+    OraUscita TIMESTAMP NOT NULL, 
+    OraRientro TIMESTAMP,
+    Mezzo INT NOT NULL REFERENCES Mezzo(Targa) ON UPDATE CASCADE ON DELETE NO ACTION,
+    UNIQUE(CodiceGiro, Data, OraUscita)
 )
 
-CREATE TABLE Mezzo(
+CREATE TABLE Mezzo( 
     Targa VARCHAR(7) PRIMARY KEY,
-    Azienda NUMERIC(11) NOT NULL REFERENCES Azienda(PartitaIVA)    
+    Azienda NUMERIC(11) NOT NULL REFERENCES Azienda(PartitaIVA) ON UPDATE CASCADE ON DELETE CASCADE   
 )
 
 CREATE TABLE Azienda(
@@ -95,41 +92,24 @@ CREATE TABLE Azienda(
 
 CREATE TABLE Tratta(
     Codice INT PRIMARY KEY,
-    FilialePartenza VARCHAR(20) REFERENCES Filiale(Codice) NOT NULL,
-    FilialeArrivo VARCHAR(20) REFERENCES Filiale(Codice) NOT NULL
+    FilialePartenza INT NOT NULL REFERENCES Filiale(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+    FilialeArrivo INT NOT NULL REFERENCES Filiale(Codice) ON UPDATE CASCADE ON DELETE NO ACTION
 )
 
 CREATE TABLE Tratta_Reale(
-    Tratta INT PRIMARY KEY REFERENCES Tratta(Codice),
-    DataPartenza DATE REFERENCES NOT NULL,
+    Codice INT PRIMARY KEY,
+    Tratta INT NOT NULL REFERENCES Tratta(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+    DataPartenza DATE NOT NULL,
     OraPartenza TIMESTAMP NOT NULL,
     DataArrivo DATE,
     OraArrivo TIMESTAMP,
-    Mezzo VARCHAR(7) REFERENCES Mezzo(Targa) 
-)
-
-CREATE TABLE Spostamenti(
-    Tratta INT REFERENCES,
-    DataPartenza DATE REFERENCES,
-    OraPartenza TIMESTAMP,
-    Codice INT,
-
-    FOREIGN KEY (Tratta, DataPartenza, OraPartenza) REFERENCES Tratta_Reale(Tratta,DataPartenza,OraPartenza),
-    FOREIGN KEY (Codice) REFERENCES Spedizioni(Codice),
-
-    PRIMARY KEY(Tratta, DataPartenza, OraArrivo, Codice)
+    Mezzo VARCHAR(7) REFERENCES Mezzo(Targa) ON UPDATE CASCADE ON DELETE NO ACTION
 )
 
 CREATE TABLE Percorso(
     Codice INT PRIMARY KEY,
     Nome VARCHAR(20) NOT NULL
 )
-
-CREATE TABLE Tratte_Percorso(
-    Percorso INT PRIMARY KEY REFERENCES Percorso(Codice),
-    Tratta INT NOT NULL REFERENCES Tratta(Codice)
-)
-
 
 CREATE TABLE Spedizione(
 	Codice INT PRIMARY KEY,
@@ -145,15 +125,17 @@ CREATE TABLE Spedizione(
 	CivicoPartenza INT NOT NULL,
 	CivicoDestinazione INT NOT NULL,
 	NominativoMittente VARCHAR(20) NOT NULL,
-	NominativoDestinatario ARCHAR(20) NOT NULL,
+	NominativoDestinatario VARCHAR(20) NOT NULL,
 	Telefono NUMERIC(10) NOT NULL,
 	
-	FOREIGN KEY(Percorso) REFERENCES Percorso(Codice),
-	FOREIGN KEY(LocalitaPartenza, LocalitaArrivo) REFERENCES Localita(CAP),
-	FOREIGN KEY(Destinatario, Mittente) REFERENCES Cliente_Registrato(CodiceCliente)
+	FOREIGN KEY(Percorso) REFERENCES Percorso(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+	FOREIGN KEY(LocalitaPartenza) REFERENCES Localita(CAP) ON UPDATE CASCADE ON DELETE NO ACTION,
+    FOREIGN KEY(LocalitaArrivo) REFERENCES Localita(CAP) ON UPDATE CASCADE ON DELETE NO ACTION,
+	FOREIGN KEY(Mittente) REFERENCES Cliente(CodiceCliente) ON UPDATE CASCADE ON DELETE NO ACTION,
+    FOREIGN KEY(Destinatario) REFERENCES Cliente(CodiceCliente) ON UPDATE CASCADE ON DELETE NO ACTION
 )
 
-CREATE TABLE Cliente_Registrato(
+CREATE TABLE Cliente(
     CodiceCliente INT PRIMARY KEY,
     Civico INT NOT NULL,
     Via VARCHAR(30) NOT NULL,
@@ -166,7 +148,7 @@ CREATE TABLE Cliente_Registrato(
 )
 
 CREATE TABLE Privato(
-	Cliente INT REFERENCES Cliente_Registrato(CodiceCliente) PRIMARY KEY,
+	Cliente INT REFERENCES Cliente(CodiceCliente) ON UPDATE CASCADE ON DELETE CASCADE PRIMARY KEY ,
 	CodiceFiscale VARCHAR(16) NOT NULL,
 	Nome VARCHAR(20) NOT NULL,
     Cognome VARCHAR(20) NOT NULL,
@@ -174,82 +156,111 @@ CREATE TABLE Privato(
 )
 
 CREATE TABLE Impresa(
-	Cliente INT REFERENCES Cliente_Registrato(CodiceCliente) PRIMARY KEY,
+	Cliente INT REFERENCES Cliente(CodiceCliente) ON UPDATE CASCADE ON DELETE CASCADE PRIMARY KEY,
 	PartitaIVA NUMERIC(11) NOT NULL,
-	Denominazione VARCHAR(20) NOT NULL
+	Denominazione VARCHAR(100) NOT NULL
 )
 
 CREATE TABLE Unita(
 	Spedizione INT,
 	NumeroUnita INT,
 	Volume INT NOT NULL,
-	Tariffa INT NOT NULL,
+	Categoria INT NOT NULL,
 	
-	FOREIGN KEY (Spedizione) REFERENCES Spedizione(Codice),
-	FOREIGN KEY (Tariffa) REFERENCES Tariffa(CodiceTariffa),
-	PRIMARY KEY (Spedizione, NumeroUnita)
-)
-
-CREATE TABLE Tariffa_Personalizzata(
-	CodiceTariffa INT PRIMARY KEY,
-	Costo INT NOT NULL
+    PRIMARY KEY (Spedizione, NumeroUnita),
+	FOREIGN KEY (Spedizione) REFERENCES Spedizione(Codice) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (Categoria) REFERENCES Categoria(CodiceCategoria) ON UPDATE CASCADE ON DELETE NO ACTION	
 )
 
 CREATE TABLE Tariffa(
 	CodiceTariffa INT PRIMARY KEY,
-	Pezzo INT NOT NULL,
-	VolumeMassimo INT NOT NULL
+	Costo INT NOT NULL
 )
 
+CREATE TABLE Impiego(
+    Dipendente INT REFERENCES Dipendente(Matricola) ON UPDATE CASCADE ON DELETE CASCADE,
+    Ruolo VARCHAR(5) REFERENCES Ruolo(Sigla) ON UPDATE CASCADE ON DELETE NO ACTION,
+    DataInizio DATE NOT NULL,
+    
+    PRIMARY KEY (Dipendente, Ruolo)
+)
+
+CREATE TABLE Afferenza(
+    Dipendente INT REFERENCES Dipendente(Matricola) ON UPDATE CASCADE ON DELETE CASCADE,
+    Sezione VARCHAR(5) NOT NULL,
+    Filiale INT NOT NULL,
+    
+    FOREIGN KEY (Sezione, Fliale) REFERENCES Sezione(Sigla, Filiale),
+    PRIMARY KEY (Dipendente, Sezione, Filiale)
+)
+
+CREATE TABLE Spostamenti(
+    Tratta INT,
+    Codice INT,
+
+    FOREIGN KEY (Tratta) REFERENCES Tratta_Reale(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+    FOREIGN KEY (Codice) REFERENCES Spedizioni(Codice)ON UPDATE CASCADE ON DELETE CASCADE,
+
+    PRIMARY KEY(Tratta, Codice)
+)
+
+CREATE TABLE Tratte_Percorso(
+    Percorso INT REFERENCES Percorso(Codice) ON UPDATE CASCADE ON DELETE CASCADE,
+    Tratta INT  REFERENCES Tratta(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+    Numero INT NOT NULL,
+
+    PRIMARY KEY(Percorso, Tratta)
+)
+
+--si potrebbe mettere tariffa alla tariffa base se diversa quando cancellata
 CREATE TABLE Tariffa_Cliente(
 	Tariffa INT,
 	Cliente INT,
 	
-	FOREIGN KEY (Tariffa) REFERENCES Tariffa_Personalizzata(CodiceTariffa),
-	FOREIGN KEY (Cliente) REFERENCES Cliente_Registrato(CodiceCliente),
+	FOREIGN KEY (Tariffa) REFERENCES Tariffa(CodiceTariffa) ON UPDATE CASCADE ON DELETE NO ACTION,
+	FOREIGN KEY (Cliente) REFERENCES Cliente(CodiceCliente) ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (Tariffa, Cliente)
 )
 
 CREATE TABLE Personalizzazione(
-	Tariffa  INT,
-	TariffaPersonalizzata INT,
-	Prezzo INT NOT NULL
-	Sconto INT NOT NULL,
+	Categoria  INT,
+	Tariffa INT,
+	Prezzo INT NOT NULL,
 	
-	FOREIGN KEY (Tariffa) REFERENCES Tariffa(CodiceTariffa),
-	FOREIGN KEY (TariffaPersonalizzata) REFERENCES Tariffa_Personalizzata(CodiceTariffa),
-	PRIMARY KEY (Tariffa, TariffaPersonalizzata)
-)
-
-CREATE TABLE Carico_Consegna(
-	Spedizione INT,
-	Consegna INT,
-	DataConsegna DATE,
-	OraConsegna TIMESTAMP,
-	 
-	FOREIGN KEY (Spedizione) REFERENCES Spedizione(Codice),
-	FOREIGN KEY (Consegna) REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro),
- 	FOREIGN KEY (DataConsegna, OraConsegna) REFERENCES Consegna_Effettiva(Data,OraUscita),
-	PRIMARY KEY (Spedizione, Consegna, DataConsegna, OraConsegna)
-)
-
-CREATE TABLE Carico_Ritiro(
-	Spedizione INT,
-	Ritiro INT,
-	DataRitiro DATE,
-	OraRitiro TIMESTAMP,
 	
-	FOREIGN KEY (Spedizione) REFERENCES Spedizione(Codice),
-	FOREIGN KEY (Ritiro) REFERENCES Zone_Di_Consegna_E_Ritiro(CodiceGiro),
- 	FOREIGN KEY (DataRitiro, OraRitiro) REFERENCES Consegna_Effettiva(Data,OraUscita),
-	PRIMARY KEY (Spedizione, Ritiro, DataRitiro, OraConsegna)
+	FOREIGN KEY (Categoria) REFERENCES Categoria(CodiceCategoria) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (Tariffa) REFERENCES Tariffa(CodiceTariffa) ON UPDATE CASCADE ON DELETE CASCADE,
+	PRIMARY KEY (Categoria, Tariffa)
 )
 
 CREATE TABLE Filiale_Corrente(
 	Spedizione INT,
 	Filiale INT,
 	
-	FOREIGN KEY (Spedizione) REFERENCES Spedizione(Codice),
-	FOREIGN KEY (Filiale) REFERENCES Filiale(Codice),
+	FOREIGN KEY (Spedizione) REFERENCES Spedizione(Codice) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (Filiale) REFERENCES Filiale(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
 	PRIMARY KEY (Spedizione, Filiale)
+)
+
+CREATE TABLE Carico_Consegna(
+	Spedizione INT REFERENCES Spedizione(Codice) ON UPDATE CASCADE ON DELETE CASCADE,
+	Consegna INT REFERENCES Consegna_Effettiva(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+	 
+	PRIMARY KEY (Spedizione, Consegna)
+)
+
+
+CREATE TABLE Carico_Ritiro(
+	Spedizione INT REFERENCES Spedizione(Codice)  ON UPDATE CASCADE ON DELETE CASCADE,
+	Ritiro INT REFERENCES Ritiro_Effettivo(Codice)  ON UPDATE CASCADE ON DELETE NO ACTION,
+	 
+	PRIMARY KEY (Spedizione, Ritiro)
+)
+
+
+
+CREATE TABLE Tariffa(
+	CodiceTariffa INT PRIMARY KEY,
+	Pezzo INT NOT NULL,
+	VolumeMassimo INT NOT NULL
 )
