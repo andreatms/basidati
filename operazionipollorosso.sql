@@ -90,3 +90,30 @@ DELETE FROM Filiale
 WHERE Filiale.Codice=$1;
 END $BODY$
 LANGUAGE plpgsql VOLATILE
+
+
+
+OP28
+CREATE OR REPLACE FUNCTION aggiungi_sezione(
+    Sigla VARCHAR(5),
+    Filiale INT,
+    Nome VARCHAR(20),
+
+)
+RETURNS void AS
+$BODY$ BEGIN
+INSERT INTO Sezione VALUES($1,$2,$3);
+END
+$BODY$ LANGUAGE plpgsql VOLATILE
+
+
+OP29
+CREATE OR REPLACE FUNCTION elimina_sezione(
+    Sigla VARCHAR(5)
+)
+RETURNS void AS
+$BODY$ BEGIN
+DELETE FROM Sezione
+WHERE Sezione.Sigla=$1;
+END $BODY$
+LANGUAGE plpgsql VOLATILE

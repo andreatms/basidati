@@ -192,7 +192,7 @@ CREATE TABLE Impiego(
 )
 
 CREATE TABLE Afferenza(
-    Dipendente INT REFERENCES Dipendente(Matricola) ON UPDATE CASCADE ON DELETE CASCADE,
+    Dipendente INT REFERENCES Dipendente(Matricola) ON UPDATE CASCADE ON NO ACTION,
     Sezione VARCHAR(5) NOT NULL,
     Filiale INT NOT NULL,
     

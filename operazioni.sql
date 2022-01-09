@@ -107,7 +107,6 @@ DECLARE i int  = 0;
 BEGIN
 FOR j IN 1..10 LOOP
     -- i will take on the values 1,2,3,4,5,6,7,8,9,10 within the loop
-END LOOP;
 -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --
 
 
@@ -231,6 +230,7 @@ $BODY$ LANGUAGE plpgsql VOLATILE
 
 OP31:
 CREATE OR REPLACE 
+
 
 
 
